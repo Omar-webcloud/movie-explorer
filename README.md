@@ -11,7 +11,7 @@
 
 This project is live at:
 
-**[https://vercel.com/omars-projects-63038184/v0-movie-xplorer](https://vercel.com/omars-projects-63038184/v0-movie-xplorer)**
+**[ https://v0-movie-xplorer.vercel.app/ ]**
 
 
 
