@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Search, Bookmark, Loader2, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,28 +25,38 @@ export default function MovieExplorer() {
     fetchTrending()
   }, [])
 
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      searchMovies(searchQuery)
-    } else {
-      fetchTrending()
-    }
-  }
+  const handleSearch = useCallback(
+    (e) => {
+      e.preventDefault()
+      if (searchQuery.trim()) {
+        searchMovies(searchQuery)
+      } else {
+        fetchTrending()
+      }
+    },
+    [searchQuery, searchMovies, fetchTrending],
+  )
 
-  const filteredMovies =
-    selectedGenres.length > 0
-      ? movies.filter((movie) => movie.genre_ids?.some((id) => selectedGenres.includes(id)))
-      : movies
+  const filteredMovies = useMemo(
+    () =>
+      selectedGenres.length > 0
+        ? movies.filter((movie) => movie.genre_ids?.some((id) => selectedGenres.includes(id)))
+        : movies,
+    [movies, selectedGenres],
+  )
 
-  const displayMovies = showWatchlist ? watchlist : filteredMovies
+  const displayMovies = useMemo(() => (showWatchlist ? watchlist : filteredMovies), [showWatchlist, watchlist, filteredMovies])
+
+  const handleGenreToggle = useCallback((genreId) => {
+    setSelectedGenres((prev) => (prev.includes(genreId) ? prev.filter((id) => id !== genreId) : [...prev, genreId]))
+  }, [])
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-primary/20 bg-background/90 backdrop-blur-xl shadow-lg shadow-primary/5">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 md:flex-nowrap">
             <div className="flex items-center gap-3">
               <div className="relative flex h-12 w-12 items-center justify-center">
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 blur-md"></div>
@@ -63,7 +73,7 @@ export default function MovieExplorer() {
               </h1>
             </div>
 
-            <form onSubmit={handleSearch} className="flex-1 max-w-xl">
+            <form onSubmit={handleSearch} className="order-3 w-full max-w-xl md:order-2 md:w-auto md:flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/70" />
                 <Input
@@ -80,7 +90,7 @@ export default function MovieExplorer() {
               variant={showWatchlist ? "default" : "outline"}
               size="sm"
               onClick={() => setShowWatchlist(!showWatchlist)}
-              className="gap-2 border-primary/30 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20"
+              className="order-2 gap-2 border-primary/30 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20 md:order-3"
             >
               <Bookmark className="h-4 w-4" />
               <span className="hidden sm:inline">Watchlist</span>
@@ -103,18 +113,14 @@ export default function MovieExplorer() {
           <div className="container mx-auto px-4 py-4">
             <GenreFilter
               selectedGenres={selectedGenres}
-              onGenreToggle={(genreId) => {
-                setSelectedGenres((prev) =>
-                  prev.includes(genreId) ? prev.filter((id) => id !== genreId) : [...prev, genreId],
-                )
-              }}
+              onGenreToggle={handleGenreToggle}
             />
           </div>
         </div>
       )}
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-1">
         {/* Section Title */}
         <div className="mb-6">
           <h2 className="text-2xl font-semibold text-balance">
@@ -201,6 +207,11 @@ export default function MovieExplorer() {
           onClose={() => setSelectedMovie(null)}
         />
       )}
+
+      {/* Footer */}
+      <footer className="py-6 text-center text-sm text-muted-foreground border-t border-primary/10 bg-background/50 backdrop-blur-sm">
+        <p>&copy; Omar 2026. All Rights Reserved</p>
+      </footer>
     </div>
   )
 }
